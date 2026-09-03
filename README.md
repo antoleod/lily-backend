@@ -50,6 +50,34 @@ cp .env.example .env
 
 The server runs on `http://localhost:4000` by default.
 
+## Configuration
+
+Environment variables are parsed and validated in `src/config/env.ts`. Copy `.env.example` to `.env` and override only the values your deployment needs.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `NODE_ENV` | `development` | Runtime mode. Accepted values are `development`, `test`, and `production`. |
+| `PORT` | `4000` | HTTP listen port. Must be an integer from 1 to 65535. |
+| `APP_NAME` | `Lily Backend` | Service name used in logs and metadata. |
+| `BUILD_COMMIT` | unset | Optional build/commit identifier exposed in health and startup diagnostics. |
+| `API_PREFIX` | `/api/v1` | URL prefix used when mounting the versioned API. |
+| `LOG_LEVEL` | `info` | Pino log level: `fatal`, `error`, `warn`, `info`, `debug`, `trace`, or `silent`. |
+| `CORS_ORIGINS` | `http://localhost:3000` | Comma-separated browser origins allowed by CORS. |
+| `BODY_SIZE_LIMIT` | `1mb` | Maximum request-body size accepted by the body parser. |
+| `RATE_LIMIT_WINDOW_MS` | `900000` | Global rate-limit window in milliseconds (15 minutes by default). |
+| `RATE_LIMIT_MAX_REQUESTS` | `100` | Maximum requests permitted per rate-limit window. |
+| `AUTH_API_KEY` | unset | Enables API-key authentication when set. Leave it unset/empty to disable API-key checks. |
+| `AUTH_API_KEY_HEADER` | `x-api-key` | Request header used to read the API key when authentication is enabled. |
+| `TRUST_PROXY` | `false` | Express proxy-trust setting. Accepts `false`, a non-negative integer hop count, or `loopback`. |
+
+### API-key authentication
+
+API-key authentication is opt-in. Set `AUTH_API_KEY` to the shared secret clients must present and, unless you override `AUTH_API_KEY_HEADER`, send it in the `x-api-key` request header. If `AUTH_API_KEY` is not set, API-key authentication remains disabled.
+
+### Proxy trust warning
+
+Use the narrowest `TRUST_PROXY` value that matches your deployment topology. A numeric value trusts only that many reverse-proxy hops, while `loopback` trusts loopback addresses. **Do not configure blanket trust for every proxy:** `TRUST_PROXY=true` is intentionally rejected because trusting all proxies can let untrusted forwarding headers influence client-IP detection, logging, and rate limiting.
+
 ## Available Endpoints
 
 - `GET /`
@@ -135,7 +163,6 @@ npm run audit:prod
 npm run build
 npm run test:coverage
 ```
-
 
 ## Contributing
 
