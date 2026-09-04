@@ -31,6 +31,35 @@ describe("health endpoints", () => {
     expect(timestampMs).toBeLessThanOrEqual(afterRequest);
   });
 
+  it("delegates liveness to the health service contract", async () => {
+    const response = await request(app).get("/api/v1/health/live");
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toMatchObject({
+      status: "ok",
+      service: env.APP_NAME,
+      timestamp: expect.any(String),
+    });
+    expect(Number.isNaN(Date.parse(response.body.data.timestamp))).toBe(false);
+  });
+
+  it("delegates readiness to the health service contract", async () => {
+    const response = await request(app).get("/api/v1/health/ready");
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toMatchObject({
+      status: "ok",
+      service: env.APP_NAME,
+      environment: env.NODE_ENV,
+      checks: {
+        dependencies: "ok",
+      },
+      timestamp: expect.any(String),
+    });
+  });
+
   it("returns a typed 404 payload for missing routes", async () => {
     const response = await request(app).get("/missing");
 
