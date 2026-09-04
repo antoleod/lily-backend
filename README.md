@@ -156,5 +156,5 @@ This backend uses **URL path versioning** as its primary API versioning mechanis
 1. Create `src/routes/v2/index.ts` with the new router
 2. Mount it in `src/app.ts`: `app.use("/api/v2", apiV2Router)`
 3. Keep `v1` routes unchanged for backward compatibility
-4. Document migration guide in `docs/migration/v1-to-v2.md`
-5. Announce deprecation timeline in CHANGELOG
+4. Document the migration in [`docs/migration/v1-to-v2.md`](./docs/migration/v1-to-v2.md)
+5. Announce the deprecation timeline in [`CHANGELOG.md`](./CHANGELOG.md)
