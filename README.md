@@ -25,6 +25,8 @@ This repository is the backend foundation for provisioning agent-facing services
 
 The production Docker image runs as the `node` user (non-root) for security. The `Dockerfile` uses the `--chown=node:node` flag on `COPY` instructions so the `node` user owns all application files. No additional configuration is needed.
 
+The image also defines a Docker `HEALTHCHECK` against `/api/v1/health/live`. The probe uses Node's built-in `fetch` and reads the same `PORT` environment variable as the server, falling back to `4000`, so changing `PORT` does not require changing the healthcheck command.
+
 ## Tech Stack
 
 - Node.js 22
@@ -123,6 +125,8 @@ tests/
 docker build -t lily-backend .
 docker run --env-file .env -p 4000:4000 lily-backend
 ```
+
+The container health probe follows `PORT`. For example, if the service runs with `PORT=5000`, publish port 5000 (`-p 5000:5000`) and Docker will probe `http://127.0.0.1:5000/api/v1/health/live` inside the container.
 
 ## Quality Standards
 
