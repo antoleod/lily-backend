@@ -52,17 +52,69 @@ The server runs on `http://localhost:4000` by default.
 
 ## Available Endpoints
 
-- `GET /`
-- `GET /api/v1/health`
-- `GET /api/v1/agents`
-- `POST /api/v1/agents`
-- `POST /api/v1/payments/quote`
+The default API prefix is `/api/v1` and can be changed with `API_PREFIX`.
+
+| Method | Path | Success | Purpose / notable errors |
+| --- | --- | --- | --- |
+| `GET` | `/` | `200` | Service metadata and health-docs pointer. |
+| `GET` | `/api/v1/health` | `200` | Service health and build metadata. |
+| `GET` | `/api/v1/health/live` | `200` | Liveness probe. |
+| `GET` | `/api/v1/health/ready` | `200` | Readiness probe. |
+| `GET` | `/api/v1/metrics` | `200` | Process metrics. |
+| `GET` | `/api/v1/agents` | `200` | List agents. |
+| `GET` | `/api/v1/agents/:id` | `200` | Fetch one agent; `404` when the id is unknown. |
+| `POST` | `/api/v1/agents` | `201` | Create an agent; `400` for invalid input. |
+| `PATCH` | `/api/v1/agents/:id` | `200` | Update agent status; `400`/`404` for invalid input or unknown id. |
+| `DELETE` | `/api/v1/agents/:id` | `204` | Delete an agent; `404` when the id is unknown. |
+| `POST` | `/api/v1/payments` | `201` | Create a quote; `400` for invalid input. |
+| `GET` | `/api/v1/payments/quotes/:id` | `200` | Retrieve a live quote; `404` if missing and `410` if expired. |
+| `POST` | `/api/v1/payments/execute` | `200` | Execute a confirmed quote; `400`, `404`, `409`, or `410` for invalid, missing, already-executed, or expired quotes. |
+
+When `AUTH_API_KEY` is configured, agent routes additionally require the configured API-key header and may return `401`/`403` for missing or incorrect credentials. API routes may also return `429` when the shared rate limit is exceeded.
 
 All `/api/v1` responses send `Cache-Control: no-store` so dynamic agent and
 payment data is not cached by clients or shared proxies. The root route is a
 basic service metadata response and is kept outside this API cache policy.
 
+### Response Envelope
+
+API handlers return successful JSON responses in this shape:
+
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
+
+The root metadata route uses `success: true` with `message` and `docs`, while successful `DELETE /api/v1/agents/:id` returns `204` with no body.
+
+Errors use the shared error envelope:
+
+```json
+{
+  "success": false,
+  "message": "Human-readable error message",
+  "code": "OPTIONAL_MACHINE_READABLE_CODE",
+  "details": {}
+}
+```
+
+`code` and `details` are optional and appear only when the error supplies them. Validation failures can use `details` for per-field errors; unknown production `500` errors are redacted to a generic message.
+
 ## Example API
+
+Create a payment quote with the route currently mounted by `payments.routes.ts`:
+
+```bash
+curl -X POST http://localhost:4000/api/v1/payments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sourceAsset": "USDC",
+    "destinationAsset": "XLM",
+    "sourceAmount": "100.00"
+  }'
+```
 
 The sample `agents` module shows contributors how to structure backend features:
 
@@ -71,18 +123,6 @@ The sample `agents` module shows contributors how to structure backend features:
 - typed controllers and responses
 - service-layer business logic
 - module-local TypeScript types
-
-Example request:
-
-```bash
-curl -X POST http://localhost:4000/api/v1/agents \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Payments Runner",
-    "description": "AgentLily responsible for autonomous USDC payment execution.",
-    "capabilities": ["payments", "marketplace-purchases"]
-  }'
-```
 
 `POST /api/v1/agents` accepts only `name`, `description`, and `capabilities`.
 Unknown payload keys are rejected with validation field errors.
