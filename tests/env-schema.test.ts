@@ -95,4 +95,46 @@ describe("Env schema parser (issue #137)", () => {
       "Invalid environment configuration",
     );
   });
+
+  it("should keep x-api-key as the default API key header", async () => {
+    delete process.env.AUTH_API_KEY_HEADER;
+    process.env.NODE_ENV = "test";
+
+    const { env } = await import("../src/config/env");
+    expect(env.AUTH_API_KEY_HEADER).toBe("x-api-key");
+  });
+
+  it("should accept an ordinary custom API key header", async () => {
+    process.env.AUTH_API_KEY_HEADER = "x-auth-key";
+    process.env.NODE_ENV = "test";
+
+    const { env } = await import("../src/config/env");
+    expect(env.AUTH_API_KEY_HEADER).toBe("x-auth-key");
+  });
+
+  it.each(["my header", "   ", "x-auth-key:", "x-auth-key\tvalue"])(
+    "should reject malformed API key header name %j",
+    async (headerName) => {
+      process.env.AUTH_API_KEY_HEADER = headerName;
+      process.env.NODE_ENV = "test";
+      vi.resetModules();
+
+      await expect(import("../src/config/env")).rejects.toThrow(
+        "Invalid environment configuration",
+      );
+    },
+  );
+
+  it.each(["authorization", "Authorization", "cookie", "set-cookie"])(
+    "should reject reserved auth/session header %j",
+    async (headerName) => {
+      process.env.AUTH_API_KEY_HEADER = headerName;
+      process.env.NODE_ENV = "test";
+      vi.resetModules();
+
+      await expect(import("../src/config/env")).rejects.toThrow(
+        "Invalid environment configuration",
+      );
+    },
+  );
 });
