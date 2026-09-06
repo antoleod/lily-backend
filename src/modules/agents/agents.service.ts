@@ -53,6 +53,10 @@ export const agentsService = {
       throw new AppError(409, "Agent with this wallet address already exists");
     }
 
+    if (agents.some((agent) => agent.walletAddress === walletAddress)) {
+      throw new AppError(409, "Agent wallet address already exists");
+    }
+
     const agent: Agent = {
       id: `agentlily_${agentSequence++}`,
       name: input.name,
