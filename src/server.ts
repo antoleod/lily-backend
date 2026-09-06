@@ -9,6 +9,11 @@ import { logger } from "./config/logger";
 const app = createApp();
 const server = createServer(app);
 
+server.on("error", (error: NodeJS.ErrnoException) => {
+  logger.fatal({ err: error, port: env.PORT }, "Failed to start HTTP server");
+  process.exit(1);
+});
+
 server.listen(env.PORT, () => {
   logger.info(
     {
