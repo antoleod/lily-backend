@@ -66,7 +66,7 @@ export const attachMethodNotAllowedHandlers = (router: Router): void => {
             next(
               new AppError(
                 405,
-                `Method ${req.method} not allowed for ${req.originalUrl}`,
+                `Method ${req.method} not allowed for ${req.path}`,
               ),
             );
           } else {
@@ -112,7 +112,7 @@ export const methodNotAllowedHandler = (router: Router) => {
       next(
         new AppError(
           405,
-          `Method ${method} not allowed for ${request.originalUrl}`,
+          `Method ${method} not allowed for ${request.path}`,
         ),
       );
       return;
