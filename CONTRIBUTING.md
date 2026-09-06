@@ -26,6 +26,8 @@ npm run build
 npm run test
 ```
 
+`npm run check` mirrors the GitHub Actions CI workflow (lint, typecheck, audit, build, test with coverage) and exits non-zero if any stage fails, so a passing `npm run check` is a strong signal the CI run will pass.
+
 ## Contribution guidelines
 
 - Keep changes focused and modular.

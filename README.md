@@ -189,7 +189,7 @@ docker run --env-file .env -p 4000:4000 lily-backend
 
 ## Quality Standards
 
-Every contribution is expected to pass:
+Every contribution is expected to pass the full pipeline:
 
 ```bash
 # Run full local verification gate
