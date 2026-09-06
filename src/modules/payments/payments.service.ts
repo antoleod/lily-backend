@@ -5,6 +5,7 @@ import type {
   ExecutePaymentInput,
   ExecutePaymentResponse,
   GetQuoteResponse,
+  ListPaymentsResponse,
   PaymentRecord,
   Quote,
 } from "./payments.types";

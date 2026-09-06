@@ -11,6 +11,18 @@ interface CreateQuoteBody {
   sourceAmount: string;
 }
 
+export const listPayments = (
+  _request: Request,
+  response: Response<
+    ApiSuccessResponse<ReturnType<typeof paymentsService.listPayments>>
+  >,
+): void => {
+  response.status(200).json({
+    success: true,
+    data: paymentsService.listPayments(),
+  });
+};
+
 export const createQuote = asyncHandler(
   async (
     request: Request,
