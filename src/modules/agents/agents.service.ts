@@ -58,7 +58,7 @@ export const agentsService = {
     const agent = agents.find((candidate) => candidate.id === id);
 
     if (!agent) {
-      throw new AppError(404, "Agent not found");
+      throw new AppError(404, "Agent not found", undefined, "NOT_FOUND");
     }
 
     agent.status = status;

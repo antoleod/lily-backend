@@ -80,9 +80,16 @@ export const errorHandler = (
     "Request failed",
   );
 
+  const code =
+    isAppError && error.code
+      ? error.code
+      : statusCode === 500
+        ? "INTERNAL_SERVER_ERROR"
+        : undefined;
+
   response.status(statusCode).json({
     success: false,
-    ...(isAppError && error.code ? { code: error.code } : {}),
+    ...(code ? { code } : {}),
     message:
       statusCode === 500 && !isAppError && env.NODE_ENV === "production"
         ? "Internal server error"
