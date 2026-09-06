@@ -15,11 +15,11 @@ const quotesStore = new Map<string, Quote>();
 const paymentsStore: PaymentRecord[] = [];
 
 const generateQuoteId = (): string => {
-  return `quote_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  return `quote_${crypto.randomUUID()}`;
 };
 
 const generatePaymentId = (): string => {
-  return `pay_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  return `pay_${crypto.randomUUID()}`;
 };
 
 /**
