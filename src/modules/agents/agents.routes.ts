@@ -2,7 +2,7 @@ import { Router } from "express";
 
 import { apiKeyAuth } from "../../common/http/api-key-auth.middleware";
 import { idempotencyKeyMiddleware } from "../../common/http/idempotency.middleware";
-import { validateBody } from "../../common/http/validate.middleware";
+import { validateBody, validateQuery } from "../../common/http/validate.middleware";
 import {
   createAgent,
   deleteAgent,
@@ -10,13 +10,17 @@ import {
   listAgents,
   updateAgentStatus,
 } from "./agents.controller";
-import { agentStatusSchema, createAgentSchema } from "./agents.schema";
+import {
+  agentStatusSchema,
+  createAgentSchema,
+  listAgentsQuerySchema,
+} from "./agents.schema";
 
 export const agentsRouter = Router();
 
 agentsRouter.use(apiKeyAuth);
 
-agentsRouter.get("/", listAgents);
+agentsRouter.get("/", validateQuery(listAgentsQuerySchema), listAgents);
 agentsRouter.get("/:id", getAgentById);
 agentsRouter.post(
   "/",

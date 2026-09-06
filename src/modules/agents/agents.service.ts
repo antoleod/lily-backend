@@ -27,10 +27,17 @@ let agents: Agent[] = [...initialAgents];
 let agentSequence = initialAgents.length + 1;
 
 export const agentsService = {
-  listAgents: (): { total: number; agents: Agent[] } => ({
-    total: agents.length,
-    agents: [...agents],
-  }),
+  listAgents: (
+    limit?: number,
+    offset?: number,
+  ): { total: number; agents: Agent[] } => {
+    const start = Math.max(0, offset ?? 0);
+    const end = limit !== undefined ? start + Math.max(0, limit) : undefined;
+    return {
+      total: agents.length,
+      agents: agents.slice(start, end),
+    };
+  },
 
   getAgentById: (id: string): Agent | undefined => {
     return agents.find((agent) => agent.id === id);

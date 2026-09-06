@@ -3,17 +3,22 @@ import type { Request, Response } from "express";
 import { AppError } from "../../common/http/app-error";
 import type { ApiSuccessResponse } from "../../common/types/api-response";
 import type { AgentStatus, CreateAgentInput } from "./agents.types";
+import type { ListAgentsQuery } from "./agents.schema";
 import { agentsService } from "./agents.service";
 
 export const listAgents = (
-  _request: Request,
+  request: Request,
   response: Response<
     ApiSuccessResponse<ReturnType<typeof agentsService.listAgents>>
   >,
 ): void => {
+  const query = (request as Request & { validatedQuery?: ListAgentsQuery })
+    .validatedQuery;
+  const { limit, offset } = query ?? {};
+
   response.status(200).json({
     success: true,
-    data: agentsService.listAgents(),
+    data: agentsService.listAgents(limit, offset),
   });
 };
 
