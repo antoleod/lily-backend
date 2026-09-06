@@ -161,6 +161,13 @@ export const paymentsService = {
     return { payment };
   },
 
+  listPayments(): { total: number; payments: PaymentRecord[] } {
+    return {
+      total: paymentsStore.length,
+      payments: [...paymentsStore],
+    };
+  },
+
   reset(): void {
     quotesStore.clear();
     paymentsStore.splice(0, paymentsStore.length);
