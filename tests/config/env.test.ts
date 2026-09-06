@@ -53,3 +53,40 @@ describe("TRUST_PROXY validation", () => {
     expect(result).toBe(false);
   });
 });
+
+describe("AUTH_API_KEY_HEADER validation (issue #291)", () => {
+  it("defaults to x-api-key when undefined", () => {
+    expect(authApiKeyHeaderSchema.parse(undefined)).toBe("x-api-key");
+  });
+
+  it("accepts standard valid header token names", () => {
+    expect(authApiKeyHeaderSchema.parse("x-api-key")).toBe("x-api-key");
+    expect(authApiKeyHeaderSchema.parse("x-auth-key")).toBe("x-auth-key");
+    expect(authApiKeyHeaderSchema.parse("X-Custom-Token")).toBe(
+      "X-Custom-Token",
+    );
+    expect(authApiKeyHeaderSchema.parse("my_api_key")).toBe("my_api_key");
+  });
+
+  it("rejects empty strings or values with whitespace", () => {
+    expect(() => authApiKeyHeaderSchema.parse("")).toThrow();
+    expect(() => authApiKeyHeaderSchema.parse("my header")).toThrow();
+    expect(() => authApiKeyHeaderSchema.parse(" x-api-key")).toThrow();
+    expect(() => authApiKeyHeaderSchema.parse("x-api-key ")).toThrow();
+  });
+
+  it("rejects header names with invalid characters", () => {
+    expect(() => authApiKeyHeaderSchema.parse("x-api:key")).toThrow();
+    expect(() => authApiKeyHeaderSchema.parse("x-api/key")).toThrow();
+    expect(() => authApiKeyHeaderSchema.parse("x-api@key")).toThrow();
+  });
+
+  it("rejects reserved headers that conflict with auth/session handling", () => {
+    expect(() => authApiKeyHeaderSchema.parse("authorization")).toThrow();
+    expect(() => authApiKeyHeaderSchema.parse("Authorization")).toThrow();
+    expect(() => authApiKeyHeaderSchema.parse("cookie")).toThrow();
+    expect(() => authApiKeyHeaderSchema.parse("set-cookie")).toThrow();
+    expect(() => authApiKeyHeaderSchema.parse("host")).toThrow();
+    expect(() => authApiKeyHeaderSchema.parse("content-type")).toThrow();
+  });
+});
