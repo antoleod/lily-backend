@@ -99,6 +99,7 @@ npm run audit:prod
 npm run format
 npm run test
 npm run test:coverage
+npm run check
 ```
 
 ## Project Structure
@@ -129,6 +130,10 @@ docker run --env-file .env -p 4000:4000 lily-backend
 Every contribution is expected to pass:
 
 ```bash
+# Run full local verification gate
+npm run check
+
+# Or run individual checks
 npm run lint
 npm run typecheck
 npm run audit:prod
