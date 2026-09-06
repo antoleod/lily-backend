@@ -9,11 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add the API v1-to-v2 migration guide scaffold required by the versioning policy.
+- A changelog and an initial API migration-guide skeleton.
 
-### Deprecated
+<!--
+When cutting a release:
+1. Rename "Unreleased" to the new version and add the release date.
+2. Add a fresh empty "Unreleased" section above it.
+3. Update the comparison links below so Unreleased starts at the new tag.
 
-- No API version is currently scheduled for deprecation. Future notices must include a timeline that preserves the documented minimum six-month notice period.
+After the first tag, use this comparison/tag release-linking convention:
+[Unreleased]: https://github.com/Lilly-Protocol/lily-backend/compare/vX.Y.Z...HEAD
+[X.Y.Z]: https://github.com/Lilly-Protocol/lily-backend/releases/tag/vX.Y.Z
+-->
 
-[Unreleased]: https://github.com/Lilly-Protocol/lily-backend/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/Lilly-Protocol/lily-backend/releases/tag/v1.0.0
+Until the first version is tagged, this link points to the current release history.
+
+[Unreleased]: https://github.com/Lilly-Protocol/lily-backend/commits/main

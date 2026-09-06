@@ -1,24 +1,30 @@
 # Migrating from API v1 to v2
 
-> **Status:** Placeholder migration guide. API v2 is not currently available. Replace the placeholders below with concrete breaking changes before v2 is released.
+> Status: Placeholder. API v2 has not been introduced yet.
 
-Lily Backend uses URL path versioning. The existing `/api/v1` routes remain available while a breaking `/api/v2` version is introduced, and v1 must remain unchanged during the migration window.
+This guide reserves the migration path for the next breaking API version. Until
+v2 is implemented, `/api/v1` remains the current and supported API surface.
 
-## Migration process
+## Maintainer process
 
-1. **Create the v2 router.** Add `src/routes/v2/index.ts` and define the new v2 router there.
-2. **Mount v2 alongside v1.** Register the router in `src/app.ts` with `app.use("/api/v2", apiV2Router)`.
-3. **Preserve v1 compatibility.** Keep the existing v1 routes unchanged so current clients continue to work during the migration period.
-4. **Document client migration details here.** Before releasing v2, replace this placeholder with the breaking-change inventory, old-to-new request/response mappings, migration examples, and any client actions required to move from v1 to v2.
+1. Create the v2 router in `src/routes/v2/index.ts`.
+2. Mount it at `/api/v2` in `src/app.ts` alongside the existing v1 router.
+3. Keep the v1 routes unchanged for backward compatibility while additive,
+   non-breaking changes continue to land in v1.
+4. Replace this placeholder with concrete consumer migration steps, document a
+   minimum six-month v1 deprecation timeline in the [changelog](../../CHANGELOG.md),
+   and announce the breaking changes in release notes.
 
-## Deprecation notice
+## Consumer migration checklist
 
-Deprecation timing is announced in [`CHANGELOG.md`](../../CHANGELOG.md). Any retirement of v1 must preserve the project's documented minimum six-month notice period.
+The completed guide for a real v2 release must identify:
 
-When v2 is prepared, this guide should record at least:
+- the affected v1 endpoints and their v2 replacements;
+- every request, response, authentication, and error-contract change;
+- side-by-side request and response examples;
+- the first v2 release containing each change;
+- the v1 deprecation date and final removal date; and
+- a rollback or compatibility strategy for consumers migrating gradually.
 
-- affected endpoints and behaviors;
-- before/after request and response examples;
-- required configuration or client-code changes;
-- rollout and rollback considerations;
-- the deprecation announcement date and earliest supported removal date, mirrored in the changelog.
+No v1 endpoint should be removed before the documented deprecation window has
+elapsed.
