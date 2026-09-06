@@ -52,40 +52,77 @@ The server runs on `http://localhost:4000` by default.
 
 ## Available Endpoints
 
-- `GET /`
-- `GET /api/v1/health`
-- `GET /api/v1/agents`
-- `POST /api/v1/agents`
-- `POST /api/v1/payments/quote`
+| Method | Path | Success | Purpose / notable route errors |
+| --- | --- | --- | --- |
+| `GET` | `/` | `200` | Basic service metadata outside the versioned API. |
+| `GET` | `/api/v1/health` | `200` | General service health. |
+| `GET` | `/api/v1/health/live` | `200` | Liveness probe. |
+| `GET` | `/api/v1/health/ready` | `200` | Readiness probe. |
+| `GET` | `/api/v1/metrics` | `200` | Process metrics. |
+| `GET` | `/api/v1/agents` | `200` | List agents. |
+| `GET` | `/api/v1/agents/:id` | `200` | Fetch one agent; `404` when it does not exist. |
+| `POST` | `/api/v1/agents` | `201` | Create an agent; `400` for an invalid request body. |
+| `PATCH` | `/api/v1/agents/:id` | `200` | Update agent status; `400` for invalid input and `404` when the agent does not exist. |
+| `DELETE` | `/api/v1/agents/:id` | `204` | Delete an agent; `404` when it does not exist. |
+| `POST` | `/api/v1/payments` | `201` | Create a payment quote; `400` for an invalid request body. |
+| `GET` | `/api/v1/payments/quotes/:id` | `200` | Fetch a live quote; `404` when missing and `410` when expired. |
+| `POST` | `/api/v1/payments/execute` | `200` | Execute a quote; `400` when unconfirmed, `404` when missing, `409` when already executed, and `410` when expired. |
+
+When API-key authentication is configured, agent routes may additionally return `401` for a missing key or `403` for an invalid key. API-wide middleware can also reject requests before route handling, including `429` when the shared rate-limit budget is exceeded.
 
 All `/api/v1` responses send `Cache-Control: no-store` so dynamic agent and
 payment data is not cached by clients or shared proxies. The root route is a
 basic service metadata response and is kept outside this API cache policy.
 
+## Response Envelope
+
+Successful JSON responses use a shared envelope:
+
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
+
+Endpoints returning `204 No Content`, such as a successful agent delete, do not include a response body.
+
+Error responses use the corresponding error envelope:
+
+```json
+{
+  "success": false,
+  "message": "Request validation failed",
+  "code": "VALIDATION_ERROR",
+  "details": {}
+}
+```
+
+`message` is always the human-readable error description. `code` and `details` are optional contract fields: handlers can provide a stable machine-readable code and structured context such as validation field errors when available.
+
 ## Example API
 
-The sample `agents` module shows contributors how to structure backend features:
+Create a payment quote with `POST /api/v1/payments`:
+
+```bash
+curl -X POST http://localhost:4000/api/v1/payments \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sourceAsset": "USDC",
+    "destinationAsset": "XLM",
+    "sourceAmount": "25.00"
+  }'
+```
+
+A successful request returns `201` with the quote under `data.quote`, including its id, source and destination amounts, fee, rate, expiration time, and status.
+
+The module layout shows contributors how to structure backend features:
 
 - route registration
 - request validation with Zod
 - typed controllers and responses
 - service-layer business logic
 - module-local TypeScript types
-
-Example request:
-
-```bash
-curl -X POST http://localhost:4000/api/v1/agents \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Payments Runner",
-    "description": "AgentLily responsible for autonomous USDC payment execution.",
-    "capabilities": ["payments", "marketplace-purchases"]
-  }'
-```
-
-`POST /api/v1/agents` accepts only `name`, `description`, and `capabilities`.
-Unknown payload keys are rejected with validation field errors.
 
 ## Scripts
 
