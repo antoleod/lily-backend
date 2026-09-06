@@ -14,6 +14,8 @@ import { agentStatusSchema, createAgentSchema } from "./agents.schema";
 
 export const agentsRouter = Router();
 
+agentsRouter.use(apiKeyAuth);
+
 agentsRouter.get("/", listAgents);
 agentsRouter.get("/:id", getAgentById);
 agentsRouter.post(
