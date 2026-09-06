@@ -127,10 +127,11 @@ export const notFoundHandler = (
   _response: Response,
   next: NextFunction,
 ): void => {
+  const pathOnly = request.originalUrl.split("?")[0] ?? request.originalUrl;
   next(
     new AppError(
       404,
-      `Route not found: ${request.method} ${request.originalUrl}`,
+      `Route not found: ${request.method} ${pathOnly}`,
       undefined,
       "NOT_FOUND",
     ),

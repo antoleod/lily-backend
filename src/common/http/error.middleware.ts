@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 
 import { AppError } from "@/common/http/app-error";
+import { sanitizeRequestUrl } from "@/common/http/request-logger";
 import { env } from "@/config/env";
 import { logger } from "@/config/logger";
 
@@ -53,7 +54,14 @@ const getMessage = (error: unknown): string => {
     return "Request body too large";
   }
 
-  return error.message;
+  let message = error.message;
+  if (error instanceof AppError && error.statusCode === 404) {
+    message = message.split("?")[0] ?? message;
+  } else if (message.includes("?")) {
+    message = sanitizeRequestUrl(message);
+  }
+
+  return message;
 };
 
 export const errorHandler = (
@@ -74,7 +82,7 @@ export const errorHandler = (
     {
       err: error,
       method: request.method,
-      path: request.originalUrl,
+      path: sanitizeRequestUrl(request.originalUrl),
       statusCode,
     },
     "Request failed",
