@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { AppError } from "../../common/http/app-error";
 import type { Capability } from "./agents.schema";
 import type { Agent, AgentStatus, CreateAgentInput } from "./agents.types";
@@ -38,7 +39,19 @@ export const agentsService = {
   createAgent: (input: CreateAgentInput): Agent => {
     const now = new Date().toISOString();
     const slug = input.name.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-    const walletAddress = `G${slug.padEnd(55, "0").slice(0, 55)}`;
+    const effectiveSeed =
+      slug.length > 0
+        ? slug
+        : crypto
+            .createHash("sha256")
+            .update(input.name)
+            .digest("hex")
+            .toUpperCase();
+    const walletAddress = `G${effectiveSeed.padEnd(55, "0").slice(0, 55)}`;
+
+    if (agents.some((candidate) => candidate.walletAddress === walletAddress)) {
+      throw new AppError(409, "Agent with this wallet address already exists");
+    }
 
     const agent: Agent = {
       id: `agentlily_${agentSequence++}`,
