@@ -28,16 +28,14 @@ const amountString = z
   .transform((value) => normalizeAmount(value));
 
 /**
- * Stellar asset codes are 1-12 alphanumeric characters. "XLM" represents the
- * native asset and is allowed as a special case of the same charset.
+ * Stellar asset codes are 3-12 uppercase letters. "XLM" represents the
+ * native asset. Lowercase and numeric-only codes are rejected.
  */
 export const stellarAssetCodeSchema = z
   .string()
   .trim()
-  .min(1)
-  .max(12)
-  .regex(/^[A-Za-z0-9]+$/, {
-    message: "Asset code must be 1-12 alphanumeric characters (e.g. USDC, XLM)",
+  .regex(/^[A-Z]{3,12}$/, {
+    message: "Asset code must be 3-12 uppercase letters (e.g. USDC, XLM)",
   });
 
 export const currencySchema = z
