@@ -72,6 +72,11 @@ export const errorHandler = (
 ): void => {
   void _next;
 
+  if (response.locals) {
+    response.locals.errorHandled = true;
+  }
+  (request as unknown as { _errorHandled?: boolean })._errorHandled = true;
+
   const statusCode = getStatusCode(error);
   const isAppError = error instanceof AppError;
   const details = isAppError ? error.details : undefined;
