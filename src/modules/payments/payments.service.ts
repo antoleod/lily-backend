@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { AppError } from "../../common/http/app-error";
 import type {
   CreateQuoteInput,

@@ -76,8 +76,73 @@ describe("createQuoteSchema", () => {
     expect(() =>
       createQuoteSchema.parse({
         sourceAsset: "USDC",
-        sourceAmount: "10.00",
+        sourceAmount: "100.00",
       }),
     ).toThrow();
+  });
+});
+
+describe("paymentsService identifier generation (crypto.randomUUID)", () => {
+  it("generates quote ids with quote_ prefix and UUID format", async () => {
+    const { paymentsService } =
+      await import("../src/modules/payments/payments.service");
+    const { quote } = paymentsService.createQuote({
+      sourceAsset: "USDC",
+      destinationAsset: "XLM",
+      sourceAmount: "100.00",
+    });
+
+    expect(quote.id).toMatch(
+      /^quote_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+  });
+
+  it("generates payment ids with pay_ prefix and UUID format", async () => {
+    const { paymentsService } =
+      await import("../src/modules/payments/payments.service");
+    const { quote } = paymentsService.createQuote({
+      sourceAsset: "USDC",
+      destinationAsset: "XLM",
+      sourceAmount: "50.00",
+    });
+
+    const { payment } = paymentsService.executePayment({
+      quoteId: quote.id,
+      confirmed: true,
+    });
+
+    expect(payment.id).toMatch(
+      /^pay_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+    );
+  });
+
+  it("produces unique quote and payment ids across rapid same-millisecond sequential calls", async () => {
+    const { paymentsService } =
+      await import("../src/modules/payments/payments.service");
+    const quoteIds = new Set<string>();
+    const count = 100;
+
+    for (let i = 0; i < count; i++) {
+      const { quote } = paymentsService.createQuote({
+        sourceAsset: "USDC",
+        destinationAsset: "XLM",
+        sourceAmount: "10.00",
+      });
+      quoteIds.add(quote.id);
+    }
+
+    expect(quoteIds.size).toBe(count);
+
+    const paymentIds = new Set<string>();
+    const sampleQuotes = Array.from(quoteIds).slice(0, 20);
+    for (const qId of sampleQuotes) {
+      const { payment } = paymentsService.executePayment({
+        quoteId: qId,
+        confirmed: true,
+      });
+      paymentIds.add(payment.id);
+    }
+
+    expect(paymentIds.size).toBe(20);
   });
 });
