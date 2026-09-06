@@ -10,9 +10,58 @@ import type {
 } from "./payments.types";
 
 const QUOTE_TTL_MS = 5 * 60 * 1000;
+const SWEEP_INTERVAL_MS = 60 * 1000;
+const MAX_IN_MEMORY_QUOTES = 5_000;
 
 const quotesStore = new Map<string, Quote>();
 const paymentsStore: PaymentRecord[] = [];
+
+let sweepTimer: ReturnType<typeof setInterval> | undefined;
+
+/**
+ * Removes quotes whose TTL has passed from the store even if they were
+ * never read. Returns the number of entries removed.
+ */
+export const sweepExpiredQuotes = (now: number = Date.now()): number => {
+  let removed = 0;
+  for (const [id, quote] of quotesStore) {
+    if (new Date(quote.expiresAt).getTime() <= now) {
+      quotesStore.delete(id);
+      removed += 1;
+    }
+  }
+  return removed;
+};
+
+const ensureSweepTimer = (): void => {
+  if (sweepTimer) {
+    return;
+  }
+  sweepTimer = setInterval(() => {
+    sweepExpiredQuotes();
+  }, SWEEP_INTERVAL_MS);
+  sweepTimer.unref?.();
+};
+
+/**
+ * Cheap lazy eviction used on the write path: quotes share one TTL, so
+ * expired entries always sit at the front of the insertion-ordered Map.
+ * Scanning from the front keeps createQuote O(1) amortized while the
+ * periodic timer handles the full sweep.
+ */
+const evictExpiredFromFront = (): void => {
+  for (;;) {
+    const oldest = quotesStore.entries().next();
+    if (oldest.done) {
+      break;
+    }
+    const [id, quote] = oldest.value;
+    if (new Date(quote.expiresAt).getTime() > Date.now()) {
+      break;
+    }
+    quotesStore.delete(id);
+  }
+};
 
 const generateQuoteId = (): string => {
   return `quote_${crypto.randomUUID()}`;
@@ -125,6 +174,9 @@ const refreshExpiry = (quote: Quote): void => {
 
 export const paymentsService = {
   createQuote(input: CreateQuoteInput): CreateQuoteResponse {
+    evictExpiredFromFront();
+    ensureSweepTimer();
+
     const now = new Date();
     const quote: Quote = {
       id: generateQuoteId(),
@@ -140,6 +192,16 @@ export const paymentsService = {
     };
 
     quotesStore.set(quote.id, quote);
+
+    // Bound the in-memory quote store: evict the oldest entries (Map
+    // preserves insertion order) once the configured maximum is exceeded.
+    while (quotesStore.size > MAX_IN_MEMORY_QUOTES) {
+      const oldestId = quotesStore.keys().next().value;
+      if (oldestId === undefined) {
+        break;
+      }
+      quotesStore.delete(oldestId);
+    }
 
     return { quote };
   },
@@ -210,5 +272,10 @@ export const paymentsService = {
   reset(): void {
     quotesStore.clear();
     paymentsStore.splice(0, paymentsStore.length);
+
+    if (sweepTimer) {
+      clearInterval(sweepTimer);
+      sweepTimer = undefined;
+    }
   },
 };
