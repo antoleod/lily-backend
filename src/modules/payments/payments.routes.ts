@@ -9,6 +9,7 @@ import {
   listPayments,
 } from "./payments.controller";
 import { createQuoteSchema, executePaymentSchema } from "./payments.schema";
+import { quoteIdParamsSchema } from "../agents/agents.schema";
 
 export const paymentsRouter = Router();
 
