@@ -185,7 +185,7 @@ export const paymentsService = {
       sourceAmount: input.sourceAmount,
       destinationAmount: computeDestinationAmount(input.sourceAmount),
       fee: computeFee(input.sourceAmount),
-      rate: "1.0002",
+      rate: QUOTE_RATE,
       expiresAt: new Date(now.getTime() + QUOTE_TTL_MS).toISOString(),
       createdAt: now.toISOString(),
       status: "active",
