@@ -63,19 +63,58 @@ export const applyStubFee = (amount: string): string => {
   return `${sign}${intResult}.${fracResult}`;
 };
 
+export const multiplyExactDecimal = (
+  amount: string,
+  multiplier: string,
+): string => {
+  const trimmed = amount.trim();
+  if (!trimmed || trimmed === "0" || trimmed === "-0") {
+    return "0";
+  }
+
+  const isNegative = trimmed.startsWith("-");
+  const unsigned = isNegative ? trimmed.slice(1) : trimmed;
+  const [intA, fracA = ""] = unsigned.split(".");
+  const digitsA = intA + fracA;
+  const scaleA = fracA.length;
+
+  const [intB, fracB = ""] = multiplier.trim().split(".");
+  const digitsB = intB + fracB;
+  const scaleB = fracB.length;
+
+  let scale = scaleA + scaleB;
+  let big =
+    BigInt(digitsA.replace(/^0+(?=\d)/, "") || "0") *
+    BigInt(digitsB.replace(/^0+(?=\d)/, "") || "0");
+
+  while (scale > 0 && big % 10n === 0n) {
+    big /= 10n;
+    scale -= 1;
+  }
+
+  if (big === 0n) {
+    return "0";
+  }
+
+  const sign = isNegative ? "-" : "";
+
+  if (scale === 0) {
+    return `${sign}${big.toString()}`;
+  }
+
+  const padded = big.toString().padStart(scale + 1, "0");
+  const intResult = padded.slice(0, padded.length - scale);
+  const fracResult = padded.slice(-scale);
+
+  return `${sign}${intResult}.${fracResult}`;
+};
+
 const computeDestinationAmount = (sourceAmount: string): string => {
-  const amount = parseFloat(sourceAmount);
-  if (Number.isNaN(amount)) return "0";
-  const rate = "1.0002";
-  const dest = amount * parseFloat(rate);
-  return dest.toFixed(6);
+  return multiplyExactDecimal(sourceAmount, "1.0002");
 };
 
 const computeFee = (sourceAmount: string): string => {
-  const amount = parseFloat(sourceAmount);
-  if (Number.isNaN(amount)) return "0";
-  const fee = amount * 0.001;
-  return fee.toFixed(6);
+  return applyStubFee(sourceAmount);
 };
 
 const refreshExpiry = (quote: Quote): void => {
