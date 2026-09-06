@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { stellarAssetCodeSchema, quoteSchema } from "../src/modules/payments/payments.schema";
+import {
+  stellarAssetCodeSchema,
+  quoteSchema,
+} from "../src/modules/payments/payments.schema";
 
 describe("stellarAssetCodeSchema", () => {
   it("accepts valid 1-12 alphanumeric codes", () => {
@@ -118,5 +121,58 @@ describe("quoteSchema", () => {
       destination: "GXYZ789",
     });
     expect(result.success).toBe(false);
+  });
+
+  it("rejects non-decimal amounts like abc, -5, 1.2.3, 1e999 and amounts with >7 decimals", () => {
+    const malformed = ["abc", "-5", "1.2.3", "1e999", "1.12345678", ""];
+    for (const val of malformed) {
+      const result = quoteSchema.safeParse({
+        assetCode: "USDC",
+        amount: val,
+        destination: "GXYZ789",
+      });
+      expect(result.success).toBe(false);
+    }
+  });
+
+  it("rejects invalid currency codes (lowercase, digits) and accepts 3 uppercase letters", () => {
+    const invalidCurrencies = ["usd", "123", "US", "USDC", "US!"];
+    for (const curr of invalidCurrencies) {
+      const result = quoteSchema.safeParse({
+        currency: curr,
+        amount: "50.00",
+        destination: "GXYZ789",
+      });
+      expect(result.success).toBe(false);
+    }
+
+    const validResult = quoteSchema.safeParse({
+      currency: "USD",
+      amount: "50.00",
+      destination: "GXYZ789",
+    });
+    expect(validResult.success).toBe(true);
+  });
+
+  it("parses valid decimal values like 7.50 and 100.00 with normalized output unchanged", () => {
+    const res1 = quoteSchema.safeParse({
+      currency: "USD",
+      amount: "7.50",
+      destination: "GXYZ789",
+    });
+    expect(res1.success).toBe(true);
+    if (res1.success) {
+      expect(res1.data.amount).toBe("7.50");
+    }
+
+    const res2 = quoteSchema.safeParse({
+      assetCode: "USDC",
+      amount: "100.00",
+      destination: "GXYZ789",
+    });
+    expect(res2.success).toBe(true);
+    if (res2.success) {
+      expect(res2.data.amount).toBe("100.00");
+    }
   });
 });
