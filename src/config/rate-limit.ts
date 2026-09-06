@@ -123,6 +123,6 @@ export const writeRateLimiter = rateLimit({
   limit: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: () => process.env.NODE_ENV === "test",
+  skip: (req) => process.env.NODE_ENV === "test" || isOperationalPath(req),
   handler: rateLimitHandler,
 });
