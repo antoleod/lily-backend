@@ -289,3 +289,52 @@ describe("assetCode validation (via quoteSchema.assetCode)", () => {
     expect(parse("123").success).toBe(false);
   });
 });
+
+describe("amountString (via quoteSchema.amount)", () => {
+  const parse = (v: string) =>
+    quoteSchema.safeParse({ assetCode: "USDC", amount: v, destination: "G" + "A".repeat(55) });
+
+  it("accepts a plain integer", () => {
+    expect(parse("100").success).toBe(true);
+  });
+
+  it("accepts a decimal with up to 7 places", () => {
+    expect(parse("0.1234567").success).toBe(true);
+  });
+
+  it("accepts zero", () => {
+    expect(parse("0").success).toBe(true);
+  });
+
+  it("rejects alphabetic input", () => {
+    expect(parse("abc").success).toBe(false);
+  });
+
+  it("rejects negative amounts", () => {
+    expect(parse("-5").success).toBe(false);
+  });
+
+  it("rejects multi-dot amounts", () => {
+    expect(parse("1.2.3").success).toBe(false);
+  });
+
+  it("rejects scientific notation", () => {
+    expect(parse("1e999").success).toBe(false);
+  });
+
+  it("rejects empty string after trim", () => {
+    expect(parse("   ").success).toBe(false);
+  });
+
+  it("rejects more than 7 decimal places", () => {
+    expect(parse("1.12345678").success).toBe(false);
+  });
+
+  it("normalizes leading zeros", () => {
+    const result = parse("007.00");
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.amount).toBe("7.00");
+    }
+  });
+});
