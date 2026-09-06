@@ -50,6 +50,31 @@ cp .env.example .env
 
 The server runs on `http://localhost:4000` by default.
 
+## Configuration
+
+All configuration is done via environment variables (see [`.env.example`](./env.example)). The table below lists every supported variable, its default, and purpose.
+
+| Variable | Default | Description |
+|---|---|---|
+| `NODE_ENV` | `development` | Environment: `development`, `test`, or `production` |
+| `PORT` | `4000` | Server listen port (1–65535) |
+| `APP_NAME` | `Lily Backend` | Application name used in health/startup responses |
+| `BUILD_COMMIT` | *(empty)* | Optional build SHA exposed in diagnostics |
+| `API_PREFIX` | `/api/v1` | URL prefix for all API routes |
+| `LOG_LEVEL` | `info` | Pino log level: `fatal`, `error`, `warn`, `info`, `debug`, `trace`, `silent` |
+| `CORS_ORIGINS` | `http://localhost:3000` | Comma-separated list of allowed CORS origins |
+| `BODY_SIZE_LIMIT` | `1mb` | Maximum request body size |
+| `RATE_LIMIT_WINDOW_MS` | `900000` (15 min) | Rate limit time window in milliseconds |
+| `RATE_LIMIT_MAX_REQUESTS` | `100` | Max requests per window per client IP |
+| `AUTH_API_KEY` | *(unset)* | **Optional.** When set, enables API key auth — requests without a matching key via `AUTH_API_KEY_HEADER` are rejected with 401. Leave unset to disable authentication. |
+| `AUTH_API_KEY_HEADER` | `x-api-key` | HTTP header name used to supply the API key |
+| `TRUST_PROXY` | `false` | Proxy trust setting: `false`, a positive integer hop count, or `loopback`. **⚠️ Setting to `"true"` trusts ALL proxies — only use in fully trusted environments.** |
+
+### Production Notes
+
+- **TRUST_PROXY**: In production behind a reverse proxy, set this to the number of proxy hops (e.g., `1`) or `"loopback"`. Avoid `"true"` — it trusts every `X-Forwarded-*` header from any source.
+- **AUTH_API_KEY**: Enable this in production to gate all API endpoints behind a shared secret. Pair with a reverse proxy that strips the header from external traffic.
+
 ## Available Endpoints
 
 | Method | Path | Success | Purpose / notable route errors |
